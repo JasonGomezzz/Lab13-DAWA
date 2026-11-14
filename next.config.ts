@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
     agentFeedback: true,
   },
   cacheComponents: true,
+  // "/" no tiene página: se redirige aquí para que Next no valide un redirect() en el prerender.
+  async redirects() {
+    return [{ source: "/", destination: "/dashboard", permanent: false }];
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
