@@ -45,7 +45,7 @@ async function LoginContent() {
           style={{ "--i": 3 } as React.CSSProperties}
         >
           <GoogleSignInButton />
-          {githubEnabled && <GitHubSignInButton />}
+          <GitHubSignInButton disabled={!githubEnabled} />
         </div>
         <p
           className="k-in text-sm text-muted"
