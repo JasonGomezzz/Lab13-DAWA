@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lab 13 — Autenticación y seguridad con NextAuth.js
 
-## Getting Started
+Aplicación Next.js (App Router) con autenticación mediante **Google OAuth**, **GitHub OAuth** y **credenciales** (correo y contraseña con registro, bcrypt y bloqueo por intentos fallidos). Laboratorio de Desarrollo de Aplicaciones Web Avanzado (TECSUP).
 
-First, run the development server:
+Repositorio: https://github.com/JasonGomezzz/Lab13-DAWA
+
+## Requisitos
+
+- Node.js 20.9 o superior (el enunciado pide > 18.18; Next.js 16 exige 20.9+).
+- Credenciales OAuth de Google y, para la tarea, de GitHub.
+
+## Instalación y ejecución
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # completar las variables
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Otros scripts: `npm run build`, `npm start`, `npm run lint`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Variables de entorno
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Ver [.env.example](.env.example). Los valores reales van en `.env.local` (ignorado por git).
 
-## Learn More
+| Variable | Uso |
+| --- | --- |
+| `NEXTAUTH_URL` | URL base de la app (`http://localhost:3000` en local, la URL de Vercel en producción) |
+| `NEXTAUTH_SECRET` | Firma de los JWT de sesión (`openssl rand -base64 32`) |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google Cloud Console → Credenciales → ID de cliente OAuth |
+| `GITHUB_ID` / `GITHUB_SECRET` | GitHub → Settings → Developer settings → OAuth Apps (el botón de GitHub solo aparece si existen) |
+| `DATABASE_URL` | PostgreSQL (opcional en local, obligatoria en Vercel) |
 
-To learn more about Next.js, take a look at the following resources:
+URIs de redirección autorizadas:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Google: `http://localhost:3000/api/auth/callback/google`
+- GitHub: `http://localhost:3000/api/auth/callback/github`
+- En producción, las mismas rutas con el dominio de Vercel.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Estructura
 
-## Deploy on Vercel
+```
+src/
+├─ app/
+│  ├─ api/auth/[...nextauth]/route.ts   # handler de NextAuth
+│  ├─ api/register/route.ts             # POST: registro de usuarios
+│  ├─ signIn/  register/                # inicio de sesión y registro
+│  ├─ dashboard/  profile/              # páginas protegidas
+│  └─ layout.tsx  page.tsx
+├─ components/                          # SessionProvider, Navbar, LogoutButton, formularios, botones OAuth
+├─ lib/
+│  ├─ auth.ts                           # authOptions (Google, GitHub, Credentials)
+│  ├─ credentials.ts                    # validación, bcrypt y bloqueo por intentos
+│  └─ users.ts                          # almacén de usuarios (JSON local / PostgreSQL)
+├─ proxy.ts                             # protege /dashboard y /profile
+└─ types/next-auth.d.ts
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Pantallas y endpoints
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Ruta | Descripción |
+| --- | --- |
+| `/` | Redirige a `/dashboard` |
+| `/signIn` | Formulario de credenciales + Google + GitHub |
+| `/register` | Formulario de registro |
+| `/dashboard`, `/profile` | Protegidas: sin sesión redirigen a `/signIn` |
+| `POST /api/register` | Crea la cuenta (400 datos inválidos, 409 correo repetido, 201 creada) |
+| `/api/auth/*` | Rutas de NextAuth |
+
+## Seguridad de las credenciales
+
+- Contraseñas con `bcryptjs` (12 rondas); nunca se guardan ni se devuelven en claro.
+- Política: 8–72 caracteres con letras y números (bcrypt solo procesa 72 bytes).
+- Bloqueo: tras **5 intentos fallidos seguidos** la cuenta se bloquea **15 minutos**; un acceso correcto reinicia el contador.
+- Un correo inexistente y una contraseña errónea dan el mismo mensaje y tardan lo mismo (hash de relleno).
+- Sesión con JWT firmado con `NEXTAUTH_SECRET`; la protección de rutas combina `proxy.ts` y `getServerSession` en cada página.
+
+## Cómo probar
+
+1. `npm run dev` y abrir http://localhost:3000 (redirige a `/signIn`).
+2. Crear una cuenta en `/register`; entra directo al dashboard.
+3. Cerrar sesión e ingresar con una contraseña incorrecta 5 veces: a la quinta aparece el mensaje de cuenta bloqueada, incluso con la contraseña correcta.
+4. Probar «Continuar con Google» y «Continuar con GitHub».
+
+## Despliegue en Vercel
+
+1. Importar el repositorio en Vercel.
+2. Crear una base PostgreSQL (Marketplace → Neon) que inyecte `DATABASE_URL`. Sin ella el registro no persiste (el disco de Vercel es efímero).
+3. Definir `NEXTAUTH_URL` (URL del despliegue), `NEXTAUTH_SECRET`, `GOOGLE_*` y `GITHUB_*`.
+4. Agregar `https://<tu-app>.vercel.app/api/auth/callback/google` y `/github` en cada proveedor.
+
+## Desviaciones respecto al enunciado
+
+- **Next.js 16**: `middleware.ts` se llama ahora `proxy.ts`; mismo comportamiento con `next-auth/middleware`.
+- **`cacheComponents` activo**: las páginas que leen la sesión se envuelven en `<Suspense>`.
+- **Imágenes remotas**: `next.config.ts` usa `images.remotePatterns` (en lugar de `domains`, en desuso) para Google y GitHub.
+- **Estructura**: `authOptions` vive en `src/lib/auth.ts` y no se exporta desde `route.ts` (Next.js no permite exportar otros nombres desde un route handler).
+- **Home**: `/` redirige a `/dashboard` como en el enunciado; el proxy lo envía a `/signIn` si no hay sesión.
+- **Secretos**: el documento muestra credenciales reales de Google en capturas; no se reutilizan, cada entorno usa las suyas en `.env.local`.
