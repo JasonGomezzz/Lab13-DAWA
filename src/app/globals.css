@@ -1,26 +1,377 @@
 @import "tailwindcss";
 
 :root {
+  --blue: #1a34ff;
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0a1033;
+  --muted: #5a6285;
+  --line: rgba(10, 16, 51, 0.14);
+  --accent: var(--blue);
+  --danger: #d92d20;
+
+  /* Curvas del sistema de movimiento */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-danger: var(--danger);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--blue);
+  color: #fff;
+}
+
+/* Panel azul sólido: reutiliza los mismos tokens con la paleta invertida */
+.k-panel {
+  --foreground: #ffffff;
+  --muted: rgba(255, 255, 255, 0.72);
+  --line: rgba(255, 255, 255, 0.22);
+  --accent: #b9c8ff;
+  background: var(--blue);
+  color: #ffffff;
+}
+
+/* ------------------------------------------------------------------ */
+/* Tipografía cinética                                                 */
+/* ------------------------------------------------------------------ */
+
+.k-display {
+  font-size: clamp(3.25rem, 9vw, 9rem);
+  line-height: 0.88;
+  letter-spacing: -0.05em;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.k-display-md {
+  font-size: clamp(2.5rem, 6.5vw, 5.75rem);
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+/* Máscara: las letras suben desde debajo de la línea */
+.k-line {
+  display: block;
+  overflow: hidden;
+  padding-block: 0.04em;
+}
+
+.k-char {
+  display: inline-block;
+  transform: translateY(108%) rotate(7deg);
+  transform-origin: 0 100%;
+  opacity: 0;
+  animation: k-rise 0.85s var(--ease-out) forwards;
+  animation-delay: calc(var(--d, 0ms) + var(--i) * 42ms);
+}
+
+@keyframes k-rise {
+  to {
+    transform: translateY(0) rotate(0);
+    opacity: 1;
+  }
+}
+
+/* El glifo interno reacciona al cursor (el externo ya tiene animación) */
+.k-glyph {
+  display: inline-block;
+  transition:
+    transform 0.4s var(--ease-out),
+    color 0.2s ease,
+    -webkit-text-stroke-color 0.2s ease;
+}
+
+.k-outline .k-glyph {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--foreground);
+}
+
+.k-accent .k-glyph {
+  color: var(--accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .k-glyph:hover {
+    transform: translateY(-0.07em) skewX(-9deg);
+    color: var(--accent);
+    -webkit-text-stroke-color: var(--accent);
+  }
+  .k-accent .k-glyph:hover {
+    color: var(--foreground);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Marquesinas (movimiento constante = linear)                         */
+/* ------------------------------------------------------------------ */
+
+.k-marquee {
+  display: flex;
+  overflow: hidden;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.k-track {
+  display: flex;
+  flex: none;
+  min-width: 100%;
+  align-items: center;
+  animation: k-scroll var(--speed, 30s) linear infinite;
+}
+
+.k-marquee[data-reverse] .k-track {
+  animation-direction: reverse;
+}
+
+@keyframes k-scroll {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.k-strip-solid {
+  background: #ffffff;
+  color: var(--blue);
+}
+
+.k-strip-line {
+  border-block: 1px solid var(--line);
+  color: var(--foreground);
+}
+
+/* ------------------------------------------------------------------ */
+/* Texto que rueda en botones                                          */
+/* ------------------------------------------------------------------ */
+
+.k-roll {
+  display: inline-block;
+  height: 1.3em;
+  overflow: hidden;
+  line-height: 1.3;
+  vertical-align: bottom;
+}
+
+.k-roll-in {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.45s var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .k-btn:hover:not(:disabled) .k-roll-in {
+    transform: translateY(-50%);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Formularios y botones                                               */
+/* ------------------------------------------------------------------ */
+
+.k-field {
+  position: relative;
+  display: block;
+}
+
+.k-label {
+  display: block;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.2s ease;
+}
+
+.k-field:focus-within .k-label {
+  color: var(--accent);
+}
+
+.k-input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 0.7rem 0 0.8rem;
+  font-size: 1.15rem;
+  color: var(--foreground);
+  outline: none;
+}
+
+.k-input::placeholder {
+  color: rgba(10, 16, 51, 0.3);
+}
+
+/* Subrayado que se dibuja al enfocar */
+.k-field::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s var(--ease-out);
+}
+
+.k-field:focus-within::after {
+  transform: scaleX(1);
+}
+
+.k-btn {
+  display: flex;
+  height: 3.5rem;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 0.14s var(--ease-out),
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.k-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.k-btn:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.k-btn-primary {
+  background: var(--blue);
+  color: #ffffff;
+}
+
+.k-btn-ghost {
+  border: 1px solid var(--line);
+  color: var(--foreground);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .k-btn-ghost:hover {
+    border-color: var(--accent);
+  }
+}
+
+.k-btn-sm {
+  height: 2.4rem;
+  width: auto;
+  padding-inline: 1.1rem;
+  font-size: 0.7rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Fondo, tarjetas y entradas escalonadas                              */
+/* ------------------------------------------------------------------ */
+
+.k-grid-bg {
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(135deg, #000 10%, transparent 85%);
+}
+
+.k-card {
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  padding: 1.25rem 1.4rem;
+  background: rgba(26, 52, 255, 0.04);
+}
+
+.k-in {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: k-fade-up 0.6s var(--ease-out) forwards;
+  animation-delay: calc(var(--d, 0ms) + var(--i, 0) * 70ms);
+}
+
+@keyframes k-fade-up {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.k-error {
+  animation: k-error-in 0.3s var(--ease-out);
+}
+
+@keyframes k-error-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.k-dot {
+  animation: k-pulse 2s ease-in-out infinite;
+}
+
+@keyframes k-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Movimiento reducido: sin desplazamientos, solo aparecer             */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .k-char {
+    transform: none;
+    animation: k-fade-only 0.4s ease forwards;
+    animation-delay: calc(var(--d, 0ms));
+  }
+  .k-track,
+  .k-dot {
+    animation: none;
+  }
+  .k-in {
+    transform: none;
+    animation: k-fade-only 0.3s ease forwards;
+  }
+  .k-field::after,
+  .k-roll-in,
+  .k-glyph {
+    transition: none;
+  }
+}
+
+@keyframes k-fade-only {
+  to {
+    opacity: 1;
+  }
 }
