@@ -28,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <Provider>
-          <Suspense fallback={<div className="h-[72px] bg-black" />}>
+          <Suspense fallback={<div className="h-16 border-b border-line" />}>
             <Navbar />
           </Suspense>
           {children}
