@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import RollText from "./kinetic/RollText";
 
 const MESSAGES: Record<string, string> = {
   INVALID_CREDENTIALS: "Correo o contraseña incorrectos.",
@@ -34,39 +35,42 @@ export default function CredentialsForm() {
       return;
     }
     setError(
-      MESSAGES[result?.error ?? ""] ?? "No se pudo iniciar sesión. Intenta de nuevo.",
+      MESSAGES[result?.error ?? ""] ??
+        "No se pudo iniciar sesión. Intenta de nuevo.",
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-3">
-      <input
-        name="email"
-        type="email"
-        required
-        autoComplete="email"
-        placeholder="Correo electrónico"
-        className="h-12 rounded-lg border border-zinc-300 bg-transparent px-4 dark:border-zinc-700"
-      />
-      <input
-        name="password"
-        type="password"
-        required
-        autoComplete="current-password"
-        placeholder="Contraseña"
-        className="h-12 rounded-lg border border-zinc-300 bg-transparent px-4 dark:border-zinc-700"
-      />
+    <form onSubmit={onSubmit} className="flex flex-col gap-7">
+      <label className="k-field">
+        <span className="k-label">Correo</span>
+        <input
+          name="email"
+          type="email"
+          required
+          autoComplete="email"
+          placeholder="tu@correo.com"
+          className="k-input"
+        />
+      </label>
+      <label className="k-field">
+        <span className="k-label">Contraseña</span>
+        <input
+          name="password"
+          type="password"
+          required
+          autoComplete="current-password"
+          placeholder="••••••••"
+          className="k-input"
+        />
+      </label>
       {error && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="k-error text-sm text-danger">
           {error}
         </p>
       )}
-      <button
-        type="submit"
-        disabled={loading}
-        className="h-12 rounded-full bg-foreground font-medium text-background transition-colors hover:opacity-80 disabled:opacity-50"
-      >
-        {loading ? "Ingresando..." : "Iniciar sesión"}
+      <button type="submit" disabled={loading} className="k-btn k-btn-primary">
+        <RollText>{loading ? "Ingresando..." : "Iniciar sesión"}</RollText>
       </button>
     </form>
   );

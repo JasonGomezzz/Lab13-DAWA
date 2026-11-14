@@ -1,29 +1,39 @@
+import { connection } from "next/server";
 import Image from "next/image";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import LogoutButton from "./LogoutButton";
 
+const link =
+  "font-mono text-xs tracking-[0.14em] uppercase text-muted transition-colors hover:text-accent";
+
 export default async function Navbar() {
+  // Sesión leída por petición: evita el prerender de valores aleatorios (csrf).
+  await connection();
   const session = await getServerSession(authOptions);
   const user = session?.user;
 
   return (
-    <nav className="w-full bg-black text-white shadow-sm">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-        <Link href="/" className="text-xl font-semibold">
+    <nav className="sticky top-0 z-20 border-b border-line bg-background/80 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 sm:px-10">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-lg font-extrabold tracking-tight uppercase"
+        >
+          <span className="size-2.5 rounded-full bg-accent" />
           MyAuthApp
         </Link>
-        <ul className="flex items-center gap-6 text-sm">
+        <ul className="flex items-center gap-6">
           <li>
-            <Link href="/dashboard" className="hover:text-gray-400">
+            <Link href="/dashboard" className={link}>
               Dashboard
             </Link>
           </li>
           {user ? (
             <>
               <li>
-                <Link href="/profile" className="hover:text-gray-400">
+                <Link href="/profile" className={link}>
                   Profile
                 </Link>
               </li>
@@ -35,16 +45,16 @@ export default async function Navbar() {
                   <Image
                     src={user.image}
                     alt={user.name ?? "Perfil"}
-                    width={40}
-                    height={40}
-                    className="size-10 rounded-full"
+                    width={36}
+                    height={36}
+                    className="size-9 rounded-full ring-2 ring-accent"
                   />
                 </li>
               )}
             </>
           ) : (
             <li>
-              <Link href="/signIn" className="hover:text-gray-400">
+              <Link href="/signIn" className={link}>
                 Iniciar sesión
               </Link>
             </li>

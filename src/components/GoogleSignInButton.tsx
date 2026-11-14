@@ -2,6 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
+import RollText from "./kinetic/RollText";
 
 export default function GoogleSignInButton({
   callbackUrl = "/dashboard",
@@ -12,10 +13,10 @@ export default function GoogleSignInButton({
     <button
       type="button"
       onClick={() => signIn("google", { callbackUrl })}
-      className="flex h-12 w-full items-center justify-center gap-3 rounded-full border border-black/[.08] bg-white px-5 font-medium text-zinc-900 transition-colors hover:bg-zinc-50 dark:border-white/[.145] dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
+      className="k-btn k-btn-ghost"
     >
       <FcGoogle className="size-5" />
-      Continuar con Google
+      <RollText>Continuar con Google</RollText>
     </button>
   );
 }
