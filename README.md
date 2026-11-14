@@ -67,6 +67,15 @@ src/
 | `POST /api/register` | Crea la cuenta (400 datos inválidos, 409 correo repetido, 201 creada) |
 | `/api/auth/*` | Rutas de NextAuth |
 
+## Diseño
+
+Interfaz en azul cobalto y blanco con tipografía cinética hecha solo con CSS (sin librerías de animación):
+
+- Titulares cuyas letras suben una a una (`KineticLine`) y reaccionan al cursor.
+- Franjas de texto que corren sin fin (`Marquee`) y botones con texto que rueda al pasar el cursor (`RollText`).
+- Solo se animan `transform` y `opacity`; los efectos de cursor se activan únicamente con puntero fino (`hover: hover`).
+- Con `prefers-reduced-motion` las letras solo aparecen (sin desplazamiento) y las franjas se detienen.
+
 ## Seguridad de las credenciales
 
 - Contraseñas con `bcryptjs` (12 rondas); nunca se guardan ni se devuelven en claro.
