@@ -84,8 +84,13 @@ type Row = {
   created_at: Date;
 };
 
-function postgresStore(url: string): UserStore {
-  const sql = postgres(url, { ssl: "require", max: 1 });
+function postgresStore(rawUrl: string): UserStore {
+  // Neon agrega channel_binding/sslmode a la URL; se quitan para no enviarlos como
+  // parámetros del servidor y el SSL se exige por opción. prepare:false por el pooler.
+  const url = new URL(rawUrl);
+  url.searchParams.delete("channel_binding");
+  url.searchParams.delete("sslmode");
+  const sql = postgres(url.toString(), { ssl: "require", max: 1, prepare: false });
   let ready: Promise<unknown> | null = null;
 
   function init() {
